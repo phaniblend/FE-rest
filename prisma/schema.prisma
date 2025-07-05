@@ -1,0 +1,179 @@
+// E:\projects\NRM\restman\prisma\schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-tenant Restaurant model
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  phone       String
+  cuisines    String[] // Array of cuisine types
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  users       User[]
+  menuItems   MenuItem[]
+  inventory   InventoryItem[]
+  orders      Order[]
+  tables      Table[]
+  
+  @@index([createdAt])
+}
+
+// User model with roles
+model User {
+  id           String   @id @default(cuid())
+  clerkId      String   @unique // Clerk user ID
+  email        String?
+  phone        String?
+  name         String?
+  role         Role
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  orders       Order[]
+  
+  @@index([clerkId])
+  @@index([restaurantId])
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  CHEF
+  WAITER
+}
+
+// Menu Items
+model MenuItem {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  category     String
+  cuisineType  String
+  isVeg        Boolean  @default(true)
+  isAvailable  Boolean  @default(true)
+  image        String?
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  recipe       Recipe?
+  orderItems   OrderItem[]
+  
+  @@index([restaurantId])
+  @@index([category])
+}
+
+// Recipe for menu items
+model Recipe {
+  id          String   @id @default(cuid())
+  menuItemId  String   @unique
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  ingredients Json     // Array of {name, quantity, unit}
+  steps       String[]
+  prepTime    Int      // in minutes
+  cookTime    Int      // in minutes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Inventory
+model InventoryItem {
+  id           String   @id @default(cuid())
+  name         String
+  category     String   // vegetables, dairy, meat, etc.
+  quantity     Float
+  unit         String   // kg, liters, pieces
+  minQuantity  Float    // for low stock alerts
+  expiryDate   DateTime?
+  cost         Float
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([restaurantId])
+  @@index([expiryDate])
+}
+
+// Tables
+model Table {
+  id           String   @id @default(cuid())
+  number       String
+  capacity     Int
+  status       TableStatus @default(FREE)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  orders       Order[]
+  
+  @@unique([restaurantId, number])
+}
+
+enum TableStatus {
+  FREE
+  OCCUPIED
+  RESERVED
+}
+
+// Orders
+model Order {
+  id           String   @id @default(cuid())
+  orderNumber  String
+  tableId      String?
+  table        Table?   @relation(fields: [tableId], references: [id])
+  waiterId     String
+  waiter       User     @relation(fields: [waiterId], references: [id])
+  status       OrderStatus @default(PENDING)
+  totalAmount  Float
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  items        OrderItem[]
+  
+  @@index([restaurantId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  SERVED
+  CANCELLED
+}
+
+// Order Items
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  price      Float    // Store price at time of order
+  notes      String?
+  
+  @@index([orderId])
+}
