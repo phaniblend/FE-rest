@@ -1,6 +1,7 @@
 // E:\projects\NRM\restman\app\page.tsx
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -19,12 +20,12 @@ export default async function HomePage() {
           The complete restaurant management solution
         </p>
         <div className="space-x-4">
-          <a href="/sign-in" className="inline-block bg-orange-600 text-white px-8 py-3 rounded-lg">
+          <Link href="/sign-in" className="inline-block bg-orange-600 text-white px-8 py-3 rounded-lg">
             Sign In
-          </a>
-          <a href="/sign-up" className="inline-block bg-gray-200 text-gray-800 px-8 py-3 rounded-lg">
+          </Link>
+          <Link href="/sign-up" className="inline-block bg-gray-200 text-gray-800 px-8 py-3 rounded-lg">
             Get Started
-          </a>
+          </Link>
         </div>
       </div>
     </div>

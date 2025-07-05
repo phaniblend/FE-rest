@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     });
 
     // Create the owner user record
-    const ownerUser = await db.user.create({
+    await db.user.create({
       data: {
         clerkId: userId,
         role: "OWNER",
@@ -36,7 +36,14 @@ export async function POST(req: Request) {
     // Create menu items if provided
     if (menuItems && menuItems.length > 0) {
       await db.menuItem.createMany({
-        data: menuItems.map((item: any) => ({
+        data: menuItems.map((item: {
+          name: string;
+          description: string;
+          price: number;
+          category: string;
+          cuisineType: string;
+          isVeg: boolean;
+        }) => ({
           ...item,
           restaurantId: restaurant.id,
           isAvailable: true,
