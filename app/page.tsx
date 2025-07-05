@@ -4,10 +4,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default async function HomePage() {
-  const { userId } = await auth();
+  try {
+    const { userId } = await auth();
 
-  if (userId) {
-    redirect("/dashboard");
+    if (userId) {
+      redirect("/dashboard");
+    }
+  } catch (error) {
+    console.error("Auth check failed:", error);
   }
 
   return (
@@ -20,10 +24,10 @@ export default async function HomePage() {
           The complete restaurant management solution
         </p>
         <div className="space-x-4">
-          <Link href="/sign-in" className="inline-block bg-orange-600 text-white px-8 py-3 rounded-lg">
+          <Link href="/sign-in" className="inline-block bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition">
             Sign In
           </Link>
-          <Link href="/sign-up" className="inline-block bg-gray-200 text-gray-800 px-8 py-3 rounded-lg">
+          <Link href="/sign-up" className="inline-block bg-gray-200 text-gray-800 px-8 py-3 rounded-lg hover:bg-gray-300 transition">
             Get Started
           </Link>
         </div>
